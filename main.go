@@ -41,6 +41,32 @@ func ListRecipeHandler(context *gin.Context) {
 	context.JSON(http.StatusOK, recipes)
 }
 
+func UpdateRecipeHandler(context *gin.Context) {
+	id := context.Param("id")
+	var recipe Recipe
+	if err := context.ShouldBindJSON(&recipe); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	index := -1
+	for i := 0; i < len(recipes); i++ {
+		if recipes[i].ID == id {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		context.JSON(http.StatusNotFound, gin.H{
+			"error": "Recipe not found",
+		})
+		return
+	}
+	recipes[index] = recipe
+	context.JSON(http.StatusOK, recipe)
+}
+
 // Initializes the recipes variable. Reads the recipes.json file and converts the content
 // into an array of recipes. Gets executed at the application startup.
 func init() {
@@ -54,5 +80,6 @@ func main() {
 	router.SetTrustedProxies([]string{"localhost"})
 	router.POST("/recipes", NewRecipeHandler)
 	router.GET("/recipes", ListRecipeHandler)
+	router.PUT("/recipes/:id", UpdateRecipeHandler)
 	router.Run()
 }
