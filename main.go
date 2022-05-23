@@ -67,6 +67,27 @@ func UpdateRecipeHandler(context *gin.Context) {
 	context.JSON(http.StatusOK, recipe)
 }
 
+func DeleteRecipeHandler(context *gin.Context) {
+	id := context.Param("id")
+	index := -1
+	for i := 0; i < len(recipes); i++ {
+		if recipes[i].ID == id {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		context.JSON(http.StatusNotFound, gin.H{
+			"error": "Recipe not found",
+		})
+		return
+	}
+	recipes = append(recipes[:index], recipes[index+1:]...)
+	context.JSON(http.StatusOK, gin.H{
+		"message": "Recipe has been deleted",
+	})
+}
+
 // Initializes the recipes variable. Reads the recipes.json file and converts the content
 // into an array of recipes. Gets executed at the application startup.
 func init() {
@@ -81,5 +102,6 @@ func main() {
 	router.POST("/recipes", NewRecipeHandler)
 	router.GET("/recipes", ListRecipeHandler)
 	router.PUT("/recipes/:id", UpdateRecipeHandler)
+	router.DELETE("/recipes/:id", DeleteRecipeHandler)
 	router.Run()
 }
