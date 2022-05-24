@@ -7,6 +7,7 @@ import (
 	"github.com/rs/xid"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -88,6 +89,23 @@ func DeleteRecipeHandler(context *gin.Context) {
 	})
 }
 
+func SearchRecipeHandler(context *gin.Context) {
+	tag := context.Query("tag")
+	listOfRecipes := make([]Recipe, 0)
+	for i := 0; i < len(recipes); i++ {
+		found := false
+		for _, t := range recipes[i].Tags {
+			if strings.EqualFold(t, tag) {
+				found = true
+			}
+		}
+		if found {
+			listOfRecipes = append(listOfRecipes, recipes[i])
+		}
+	}
+	context.JSON(http.StatusOK, listOfRecipes)
+}
+
 // Initializes the recipes variable. Reads the recipes.json file and converts the content
 // into an array of recipes. Gets executed at the application startup.
 func init() {
@@ -103,5 +121,6 @@ func main() {
 	router.GET("/recipes", ListRecipeHandler)
 	router.PUT("/recipes/:id", UpdateRecipeHandler)
 	router.DELETE("/recipes/:id", DeleteRecipeHandler)
+	router.GET("recipes/search", SearchRecipeHandler)
 	router.Run()
 }
