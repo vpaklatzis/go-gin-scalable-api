@@ -4,13 +4,14 @@ import (
 	"context"
 	"gin-scalable-api/handlers"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
 )
 
-// We use the bson tag to map a struct field to the document attribute in the MongoDB collection
+// We use the bson tag to map a struct field to the document attribute in the MongooDB collection
 
 // Initializes the recipes variable. Reads the recipes.json file and converts the content
 // into an array of recipes. Gets executed at the application startup.
@@ -26,7 +27,14 @@ func init() {
 	}
 	log.Println("Connected to mongodb!")
 	collection := client.Database("recipes_db").Collection("recipes")
-	recipesHandler = handlers.NewRecipesHandler(ctx, collection)
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+	status := redisClient.Ping(ctx)
+	log.Println(status)
+	recipesHandler = handlers.NewRecipesHandler(ctx, collection, redisClient)
 	//var listOfRecipes []interface{}
 	//for _, recipe := range recipes {
 	//	listOfRecipes = append(listOfRecipes, recipe)
